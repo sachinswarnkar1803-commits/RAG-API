@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FastAPI Educational Assistant — Sign In / Register</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #090d16;
+      --bg-card: rgba(18, 26, 43, 0.85);
+      --border-color: rgba(255, 255, 255, 0.1);
+      --border-glow: rgba(139, 92, 246, 0.4);
+      --primary: #8b5cf6;
+      --primary-hover: #7c3aed;
+      --primary-light: #c084fc;
+      --secondary: #06b6d4;
+      --accent-green: #10b981;
+      --accent-red: #ef4444;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --font-heading: 'Outfit', sans-serif;
+      --font-body: 'Inter', sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(at 20% 20%, rgba(139, 92, 246, 0.25) 0px, transparent 50%),
+        radial-gradient(at 80% 80%, rgba(6, 182, 212, 0.25) 0px, transparent 50%);
+      background-attachment: fixed;
+      color: var(--text-main);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .auth-container {
+      width: 100%;
+      max-width: 440px;
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border-glow);
+      border-radius: 24px;
+      padding: 36px 32px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .brand-header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .brand-icon {
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin: 0 auto 16px auto;
+      box-shadow: 0 0 24px rgba(139, 92, 246, 0.4);
+    }
+
+    .brand-header h1 {
+      font-family: var(--font-heading);
+      font-size: 24px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #ffffff, var(--primary-light));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 4px;
+    }
+
+    .brand-header p {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .auth-nav {
+      display: flex;
+      gap: 8px;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 4px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      margin-bottom: 24px;
+    }
+
+    .auth-nav-btn {
+      flex: 1;
+      padding: 10px;
+      background: transparent;
+      border: none;
+      border-radius: 9px;
+      color: var(--text-muted);
+      font-family: var(--font-heading);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .auth-nav-btn.active {
+      color: var(--text-main);
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.4), rgba(6, 182, 212, 0.3));
+      border: 1px solid var(--border-glow);
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 14px 16px;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      color: var(--text-main);
+      font-size: 14px;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .form-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 16px rgba(139, 92, 246, 0.3);
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-family: var(--font-heading);
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-top: 8px;
+    }
+
+    .btn-submit:hover {
+      opacity: 0.95;
+      transform: translateY(-1px);
+    }
+
+    .msg-box {
+      font-size: 13px;
+      margin-bottom: 16px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      display: none;
+    }
+
+    .msg-box.error {
+      display: block;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid var(--accent-red);
+      color: #fca5a5;
+    }
+
+    .msg-box.success {
+      display: block;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid var(--accent-green);
+      color: #6ee7b7;
+    }
+
+    .quick-fill-box {
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border-color);
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .quick-chip {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      border-radius: 99px;
+      padding: 5px 12px;
+      margin: 4px;
+      cursor: pointer;
+      color: var(--primary-light);
+      transition: all 0.2s ease;
+    }
+
+    .quick-chip:hover {
+      background: rgba(139, 92, 246, 0.2);
+      border-color: var(--primary-light);
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-container">
+    <div class="brand-header">
+      <div class="brand-icon">📚</div>
+      <h1>FastAPI Assistant</h1>
+      <p>Sign in or create an account to access RAG & PDF Reader</p>
+    </div>
+
+    <!-- Auth Tabs -->
+    <div class="auth-nav">
+      <button id="navLoginBtn" class="auth-nav-btn active" onclick="switchAuthTab('login')">Sign In</button>
+      <button id="navRegBtn" class="auth-nav-btn" onclick="switchAuthTab('register')">Register Account</button>
+    </div>
+
+    <div id="msgBox" class="msg-box"></div>
+
+    <!-- Sign In Form -->
+    <form id="loginForm" onsubmit="event.preventDefault(); submitLogin();">
+      <div class="form-group">
+        <label for="loginUsername">Username</label>
+        <input type="text" id="loginUsername" class="form-input" placeholder="Enter username" required>
+      </div>
+      <div class="form-group">
+        <label for="loginPassword">Password</label>
+        <input type="password" id="loginPassword" class="form-input" placeholder="Enter password" required>
+      </div>
+      <button type="submit" class="btn-submit">Sign In to Dashboard →</button>
+    </form>
+
+    <!-- Register Form -->
+    <form id="regForm" style="display:none;" onsubmit="event.preventDefault(); submitRegister();">
+      <div class="form-group">
+        <label for="regUsername">Choose Username</label>
+        <input type="text" id="regUsername" class="form-input" placeholder="At least 3 characters" required>
+      </div>
+      <div class="form-group">
+        <label for="regPassword">Choose Password</label>
+        <input type="password" id="regPassword" class="form-input" placeholder="At least 4 characters" required>
+      </div>
+      <button type="submit" class="btn-submit">Create Account & Sign In →</button>
+    </form>
+
+    <!-- Demo Quick-Fill -->
+    <div class="quick-fill-box">
+      <div>Quick Demo Login Accounts:</div>
+      <span class="quick-chip" onclick="quickFill('student', 'student123')">Student (student/student123)</span>
+      <span class="quick-chip" onclick="quickFill('admin', 'admin123')">Admin (admin/admin123)</span>
+    </div>
+  </div>
+
+  <script>
+    function switchAuthTab(mode) {
+      const msgBox = document.getElementById('msgBox');
+      msgBox.className = 'msg-box';
+      msgBox.style.display = 'none';
+
+      if (mode === 'login') {
+        document.getElementById('loginForm').style.display = 'block';
+        document.getElementById('regForm').style.display = 'none';
+        document.getElementById('navLoginBtn').classList.add('active');
+        document.getElementById('navRegBtn').classList.remove('active');
+      } else {
+        document.getElementById('loginForm').style.display = 'none';
+        document.getElementById('regForm').style.display = 'block';
+        document.getElementById('navLoginBtn').classList.remove('active');
+        document.getElementById('navRegBtn').classList.add('active');
+      }
+    }
+
+    function showMessage(text, isError) {
+      const msgBox = document.getElementById('msgBox');
+      msgBox.innerText = text;
+      msgBox.className = `msg-box ${isError ? 'error' : 'success'}`;
+    }
+
+    function quickFill(user, pass) {
+      switchAuthTab('login');
+      document.getElementById('loginUsername').value = user;
+      document.getElementById('loginPassword').value = pass;
+      submitLogin();
+    }
+
+    async function submitLogin() {
+      const u = document.getElementById('loginUsername').value.trim();
+      const p = document.getElementById('loginPassword').value.trim();
+
+      if (!u || !p) { showMessage("Please enter username and password.", true); return; }
+
+      try {
+        const res = await fetch('/login/json', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: u, password: p })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          localStorage.setItem('access_token', data.access_token);
+          localStorage.setItem('username', u);
+          showMessage("✓ Signed in successfully! Redirecting to application...", false);
+          setTimeout(() => { window.location.href = '/'; }, 600);
+        } else {
+          showMessage(data.detail || "Invalid username or password.", true);
+        }
+      } catch (err) {
+        showMessage(`Connection error: ${err.message}`, true);
+      }
+    }
+
+    async function submitRegister() {
+      const u = document.getElementById('regUsername').value.trim();
+      const p = document.getElementById('regPassword').value.trim();
+
+      if (!u || !p) { showMessage("Please enter username and password.", true); return; }
+
+      try {
+        const res = await fetch('/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: u, password: p })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          localStorage.setItem('access_token', data.access_token);
+          localStorage.setItem('username', u);
+          showMessage("✓ Account created & signed in! Redirecting...", false);
+          setTimeout(() => { window.location.href = '/'; }, 600);
+        } else {
+          showMessage(data.detail || "Registration failed.", true);
+        }
+      } catch (err) {
+        showMessage(`Connection error: ${err.message}`, true);
+      }
+    }
+  </script>
+</body>
+</html>

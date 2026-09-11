@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FastAPI Educational Assistant — Document Reader & RAG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #090d16;
+      --bg-card: rgba(18, 26, 43, 0.75);
+      --bg-card-hover: rgba(28, 40, 65, 0.85);
+      --border-color: rgba(255, 255, 255, 0.1);
+      --border-glow: rgba(139, 92, 246, 0.4);
+      --primary: #8b5cf6;
+      --primary-hover: #7c3aed;
+      --primary-light: #c084fc;
+      --secondary: #06b6d4;
+      --accent-green: #10b981;
+      --accent-red: #ef4444;
+      --accent-amber: #f59e0b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --font-heading: 'Outfit', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      --font-code: 'Fira Code', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.15) 0px, transparent 50%);
+      background-attachment: fixed;
+      color: var(--text-main);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 24px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+    }
+
+    .brand h1 {
+      font-family: var(--font-heading);
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #ffffff, var(--primary-light));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand p {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 8px 16px;
+      border-radius: 99px;
+      font-size: 13px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--accent-green);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--accent-green);
+    }
+
+    .tabs-nav {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 32px;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 6px;
+      border-radius: 16px;
+      border: 1px solid var(--border-color);
+    }
+
+    .tab-btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 18px;
+      background: transparent;
+      border: none;
+      border-radius: 12px;
+      color: var(--text-muted);
+      font-family: var(--font-heading);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .tab-btn.active {
+      color: var(--text-main);
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(6, 182, 212, 0.2));
+      border: 1px solid var(--border-glow);
+      box-shadow: 0 4px 20px rgba(139, 92, 246, 0.2);
+    }
+
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .card-title {
+      font-family: var(--font-heading);
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .search-box-wrapper {
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 16px 20px;
+      padding-right: 120px;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      color: var(--text-main);
+      font-family: var(--font-body);
+      font-size: 15px;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .search-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+    }
+
+    .btn-ask {
+      position: absolute;
+      right: 8px;
+      top: 8px;
+      bottom: 8px;
+      padding: 0 24px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      border: none;
+      border-radius: 12px;
+      color: white;
+      font-family: var(--font-heading);
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.1s ease;
+    }
+
+    .btn-ask:hover { transform: scale(1.02); }
+
+    .presets-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .chip {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      border-radius: 99px;
+      padding: 6px 14px;
+      font-size: 12px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .chip:hover {
+      background: rgba(139, 92, 246, 0.2);
+      border-color: var(--primary-light);
+      color: var(--text-main);
+    }
+
+    .answer-card {
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid var(--border-glow);
+      border-radius: 16px;
+      padding: 24px;
+      margin-top: 20px;
+    }
+
+    .answer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .score-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 99px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .score-badge.high { background: rgba(16, 185, 129, 0.2); color: var(--accent-green); border: 1px solid var(--accent-green); }
+    .score-badge.low { background: rgba(239, 68, 68, 0.2); color: var(--accent-red); border: 1px solid var(--accent-red); }
+
+    .answer-text {
+      font-size: 15px;
+      white-space: pre-wrap;
+      color: #e2e8f0;
+      margin-bottom: 20px;
+    }
+
+    .chunks-title {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+
+    .chunk-item {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-family: var(--font-heading);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+
+    .upload-dropzone {
+      border: 2px dashed var(--border-glow);
+      border-radius: 16px;
+      padding: 24px;
+      text-align: center;
+      background: rgba(139, 92, 246, 0.05);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-bottom: 16px;
+    }
+
+    .upload-dropzone:hover {
+      background: rgba(139, 92, 246, 0.1);
+      border-color: var(--primary-light);
+    }
+
+    .text-editor-box {
+      width: 100%;
+      height: 140px;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px 16px;
+      color: var(--text-main);
+      font-family: var(--font-body);
+      font-size: 14px;
+      outline: none;
+      margin-bottom: 12px;
+      resize: vertical;
+    }
+
+    .text-editor-box:focus {
+      border-color: var(--primary);
+    }
+
+    .doc-reader-box {
+      background: #0b1120;
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 20px;
+      max-height: 380px;
+      overflow-y: auto;
+      font-family: var(--font-code);
+      font-size: 13px;
+      color: #cbd5e1;
+      white-space: pre-wrap;
+      line-height: 1.7;
+    }
+
+    .kb-stats {
+      display: flex;
+      gap: 24px;
+      margin-bottom: 16px;
+    }
+
+    .kb-stat-item {
+      font-size: 14px;
+    }
+
+    .kb-stat-item strong { color: var(--secondary); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="brand">
+        <div class="brand-icon">📚</div>
+        <div>
+          <h1>FastAPI Educational Assistant — Document Reader & RAG</h1>
+          <p>Read, Train & Ask Questions from PDF, TXT, MD Documents & User Inputs</p>
+        </div>
+      </div>
+      <div class="user-pill" id="userPill">
+        <div class="status-dot"></div>
+        <span id="currentUsername">Guest User</span>
+        <button id="authBtn" onclick="goToLoginPage()" style="background:none; border:none; color:var(--primary-light); cursor:pointer; font-size:12px; margin-left:8px;">[Sign In / Register]</button>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs-nav">
+      <button class="tab-btn active" onclick="switchTab('tab-rag', event)">💬 RAG Q&A Tester</button>
+      <button class="tab-btn" onclick="switchTab('tab-reader', event)">📄 Document Reader & Self-Training Model</button>
+    </div>
+
+    <!-- TAB 1: RAG Q&A Tester -->
+    <div id="tab-rag" class="tab-content active">
+      <div class="card">
+        <div class="card-title">
+          <span>Ask Questions from Current Trained Document</span>
+          <span style="font-size:12px; color:var(--text-muted);" id="activeDocBadge">Active Doc: Loading...</span>
+        </div>
+
+        <div class="search-box-wrapper">
+          <input type="text" id="ragQueryInput" class="search-input" placeholder="Ask any question from the active document or notes...">
+          <button class="btn-ask" onclick="submitAskQuery('ragQueryInput', 'ragAnswerContainer')">Ask RAG</button>
+        </div>
+
+        <!-- Presets -->
+        <div class="presets-container">
+          <div style="font-size:12px; text-transform:uppercase; color:var(--text-dim); margin-bottom:8px; font-weight:600;">Sample Preset Questions (NLP & FastAPI Syllabus):</div>
+          
+          <div class="presets-chips">
+            <span class="chip" onclick="setQuery('What is Natural Language Processing?')">Exact: What is NLP?</span>
+            <span class="chip" onclick="setQuery('What is tokenization?')">Exact: Tokenization</span>
+            <span class="chip" onclick="setQuery('What is TF-IDF?')">Exact: TF-IDF</span>
+            <span class="chip" onclick="setQuery('What is VADER?')">Exact: VADER</span>
+            <span class="chip" onclick="setQuery('What are BERT, GPT and RoBERTa?')">Exact: Transformers</span>
+            <span class="chip" onclick="setQuery('How is a root word obtained by cutting endings?')">Paraphrase: Root Word</span>
+            <span class="chip" onclick="setQuery('Difference between stemming and lemmatization')">Comparison: Stemming vs Lemmatization</span>
+            <span class="chip" onclick="setQuery('What is the formula for cosine similarity?')">Formula: Cosine Similarity</span>
+            <span class="chip" onclick="setQuery('What is today\'s weather?')">Out-of-Scope: Weather</span>
+          </div>
+        </div>
+
+        <!-- Answer Container -->
+        <div id="ragAnswerContainer" style="display:none;"></div>
+      </div>
+    </div>
+
+    <!-- TAB 2: Document Reader & Self-Training Model -->
+    <div id="tab-reader" class="tab-content">
+      <div class="card">
+        <div class="card-title">
+          <span>Self-Train RAG Model on User Documents & PDFs</span>
+          <button class="chip" onclick="resetDefaultModel()">Reset to Default Notes (notes.py)</button>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:20px;">
+          <!-- Left: File Upload -->
+          <div>
+            <div style="font-size:12px; text-transform:uppercase; color:var(--text-dim); margin-bottom:8px; font-weight:600;">Option A: Upload PDF, TXT or MD File</div>
+            <div class="upload-dropzone" onclick="document.getElementById('tempFileInput').click()">
+              <div style="font-size:28px; margin-bottom:6px;">📑</div>
+              <div style="font-size:14px; font-weight:600; margin-bottom:4px;">Click to Upload PDF, TXT or MD</div>
+              <div style="font-size:12px; color:var(--text-muted);">Extracts text & trains the model instantly</div>
+              <input type="file" id="tempFileInput" accept=".pdf,.txt,.md,.doc,.docx" style="display:none;" onchange="uploadTemporaryNotes(this.files[0])">
+            </div>
+            
+            <div style="display:flex; gap:10px;">
+              <button class="btn-primary" style="font-size:13px; padding:8px 16px;" onclick="trainNotesPy()">⚡ Train on notes.py</button>
+            </div>
+          </div>
+
+          <!-- Right: Paste Raw Text -->
+          <div>
+            <div style="font-size:12px; text-transform:uppercase; color:var(--text-dim); margin-bottom:8px; font-weight:600;">Option B: Type / Paste Document Text directly</div>
+            <textarea id="userTextInput" class="text-editor-box" placeholder="Paste your custom document text, study notes, or PDF text paragraphs here..."></textarea>
+            <button class="btn-primary" style="width:100%;" onclick="submitUserTextInput()">⚡ Self-Train Model on Pasted Text</button>
+          </div>
+        </div>
+
+        <div id="trainerMsg" style="margin-bottom:16px; font-size:14px; font-weight:600; color:var(--accent-green);"></div>
+
+        <!-- Document Viewer / Reader Pane -->
+        <div class="card-title" style="margin-top:24px;">
+          <span>Active Document Reader Pane</span>
+          <span style="font-size:13px; color:var(--secondary);" id="readerDocTitle">Loading Document...</span>
+        </div>
+
+        <div class="kb-stats" id="readerStats">
+          <div class="kb-stat-item">Character Count: <strong id="readChars">0</strong></div>
+          <div class="kb-stat-item">Sections/Paragraphs: <strong id="readSections">0</strong></div>
+          <div class="kb-stat-item">Vocabulary Terms: <strong id="readVocab">0</strong></div>
+        </div>
+
+        <div class="doc-reader-box" id="docReaderText">Select or upload a PDF / document to view and read its content here...</div>
+
+        <!-- EMBEDDED PDF Q&A PANEL -->
+        <div class="answer-card" style="margin-top:24px; border-color:var(--border-glow);">
+          <div class="card-title" style="margin-bottom:12px;">
+            <span>💬 Ask Questions Directly From This Loaded PDF / Document</span>
+          </div>
+          
+          <div class="search-box-wrapper" style="margin-bottom:12px;">
+            <input type="text" id="pdfQueryInput" class="search-input" placeholder="Ask any question about the text in your loaded PDF / document...">
+            <button class="btn-ask" onclick="submitAskQuery('pdfQueryInput', 'pdfAnswerContainer')">Ask PDF</button>
+          </div>
+
+          <div id="pdfAnswerContainer" style="display:none;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let authToken = localStorage.getItem('access_token') || "";
+    let activeUsername = localStorage.getItem('username') || "";
+
+    function checkAuthSession() {
+      if (authToken && activeUsername) {
+        document.getElementById('currentUsername').innerText = `Logged in: ${activeUsername}`;
+        document.getElementById('authBtn').innerText = '[Logout]';
+        document.getElementById('authBtn').onclick = logoutUser;
+      } else {
+        performStudentAutoLogin();
+      }
+    }
+
+    async function performStudentAutoLogin() {
+      try {
+        const res = await fetch('/login/json', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: 'student', password: 'student123' })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          authToken = data.access_token;
+          activeUsername = 'student';
+          document.getElementById('currentUsername').innerText = `Logged in: student`;
+          document.getElementById('authBtn').innerText = '[Sign In / Register]';
+          document.getElementById('authBtn').onclick = goToLoginPage;
+        }
+      } catch (err) {}
+    }
+
+    function goToLoginPage() {
+      window.location.href = '/login-page';
+    }
+
+    function logoutUser() {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('username');
+      authToken = "";
+      activeUsername = "";
+      window.location.href = '/login-page';
+    }
+
+    function switchTab(tabId, evt) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      
+      if (evt && evt.currentTarget) {
+        evt.currentTarget.classList.add('active');
+      }
+      document.getElementById(tabId).classList.add('active');
+
+      if (tabId === 'tab-reader') fetchActiveDocumentReader();
+    }
+
+    function setQuery(q) {
+      document.getElementById('ragQueryInput').value = q;
+      submitAskQuery('ragQueryInput', 'ragAnswerContainer');
+    }
+
+    async function submitAskQuery(inputId, containerId) {
+      const q = document.getElementById(inputId).value.trim();
+      if (!q) return;
+
+      const container = document.getElementById(containerId);
+      container.style.display = 'block';
+      container.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">Searching document knowledge base...</div>';
+
+      try {
+        const headers = { 'Content-Type': 'application/json' };
+        if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+
+        const res = await fetch('/ask', {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify({ question: q })
+        });
+
+        if (!res.ok) {
+          if (res.status === 401) {
+            goToLoginPage();
+            return;
+          }
+          throw new Error(`Error ${res.status}: ${res.statusText}`);
+        }
+
+        const data = await res.json();
+        renderAnswer(data, containerId);
+      } catch (err) {
+        container.innerHTML = `<div style="color:var(--accent-red); padding:16px;">${err.message}</div>`;
+      }
+    }
+
+    function renderAnswer(data, containerId) {
+      const container = document.getElementById(containerId);
+      const scorePct = (data.score * 100).toFixed(1);
+      const isFound = data.found;
+
+      let chunksHtml = '';
+      if (data.results && data.results.length > 0) {
+        chunksHtml = data.results.map((r, i) => `
+          <div class="chunk-item">
+            <div style="display:flex; justify-content:space-between; font-weight:600; margin-bottom:4px;">
+              <span>#${i+1} ${r.title}</span>
+              <span style="color:var(--secondary);">${(r.score*100).toFixed(1)}% Match</span>
+            </div>
+            <div style="color:var(--text-muted); font-size:12px;">${r.content.substring(0, 200)}...</div>
+          </div>
+        `).join('');
+      }
+
+      container.innerHTML = `
+        <div class="answer-card">
+          <div class="answer-header">
+            <div>
+              <span class="score-badge ${isFound ? 'high' : 'low'}">
+                ${isFound ? '✓ Answer Found in Document' : '✗ Not Found in Loaded Document'} (${scorePct}% Similarity)
+              </span>
+              ${data.source ? `<span style="font-size:13px; color:var(--text-muted); margin-left:12px;">Source: <strong>${data.source}</strong></span>` : ''}
+            </div>
+          </div>
+          <div class="answer-text">${data.answer}</div>
+          
+          ${chunksHtml ? `
+            <div class="chunks-title">Top Matching Paragraphs from PDF / Document:</div>
+            ${chunksHtml}
+          ` : ''}
+        </div>
+      `;
+    }
+
+    async function fetchActiveDocumentReader() {
+      try {
+        const headers = {};
+        if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+        const res = await fetch('/model/reader', { headers });
+        const data = await res.json();
+
+        document.getElementById('readerDocTitle').innerText = data.title;
+        document.getElementById('readChars').innerText = data.char_count.toLocaleString();
+        document.getElementById('readSections').innerText = data.sections;
+        document.getElementById('readVocab').innerText = data.vocabulary_size;
+        document.getElementById('docReaderText').innerText = data.text;
+        document.getElementById('activeDocBadge').innerText = `Active Doc: ${data.title}`;
+      } catch (err) {}
+    }
+
+    async function uploadTemporaryNotes(file) {
+      if (!file) return;
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const msg = document.getElementById('trainerMsg');
+      msg.innerText = `Reading & training model on '${file.name}'...`;
+
+      try {
+        const res = await fetch('/train/temporary', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${authToken}` },
+          body: formData
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          msg.innerText = `✓ Model successfully parsed & trained on '${file.name}' (${data.documents} sections, ${data.vocabulary_size} vocabulary terms).`;
+          fetchActiveDocumentReader();
+        } else {
+          msg.innerText = `Error: ${data.detail}`;
+        }
+      } catch (err) {
+        msg.innerText = `Error: ${err.message}`;
+      }
+    }
+
+    async function submitUserTextInput() {
+      const text = document.getElementById('userTextInput').value.trim();
+      if (!text) {
+        alert("Please enter or paste document text to train!");
+        return;
+      }
+
+      const msg = document.getElementById('trainerMsg');
+      msg.innerText = "Training model on user input text...";
+
+      try {
+        const res = await fetch('/train/text', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}` 
+          },
+          body: JSON.stringify({ text: text, title: "Pasted User Document" })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          msg.innerText = `✓ Model trained successfully on user input text (${data.documents} sections, ${data.vocabulary_size} terms).`;
+          fetchActiveDocumentReader();
+        } else {
+          msg.innerText = `Error: ${data.detail}`;
+        }
+      } catch (err) {
+        msg.innerText = `Error: ${err.message}`;
+      }
+    }
+
+    async function trainNotesPy() {
+      const msg = document.getElementById('trainerMsg');
+      msg.innerText = "Training model on notes.py...";
+      try {
+        const res = await fetch('/train/notes-py', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        const data = await res.json();
+        if (res.ok) {
+          msg.innerText = `✓ Model trained successfully on notes.py (${data.documents} sections, ${data.vocabulary_size} terms).`;
+          fetchActiveDocumentReader();
+        } else {
+          msg.innerText = `Error: ${data.detail}`;
+        }
+      } catch (err) {
+        msg.innerText = `Error: ${err.message}`;
+      }
+    }
+
+    async function resetDefaultModel() {
+      try {
+        const res = await fetch('/model/reset', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        const data = await res.json();
+        document.getElementById('trainerMsg').innerText = "✓ Knowledge base reset to default notes.py";
+        fetchActiveDocumentReader();
+      } catch (err) {}
+    }
+
+    checkAuthSession();
+    fetchActiveDocumentReader();
+  </script>
+</body>
+</html>

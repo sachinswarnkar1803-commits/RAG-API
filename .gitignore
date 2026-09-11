@@ -11,9 +11,9 @@ ENV/
 env.bak/
 venv.bak/
 
-# Environment Variables
+# Environment Variables — never commit real secrets
 .env
-!.env.example
+env
 
 # Logs
 logs/
@@ -28,3 +28,9 @@ logs/
 # Data & Database
 data/*.db
 data/*.sqlite
+
+# Uploads folder (user-uploaded files, not source code)
+uploads/
+
+# Pytest cache
+.pytest_cache/

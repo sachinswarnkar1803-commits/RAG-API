@@ -1,85 +1,115 @@
-# FastAPI Education Assistant — RAG API
+# FastAPI RAG Assistant & Document Reader API
 
-**Backend-only project. No frontend application is included.**
+A streamlined **Retrieval-Augmented Generation (RAG) API** built with **FastAPI**, featuring:
+- 🔐 JWT OAuth2 Authentication (Login, Register)
+- 📄 Multi-format Document Ingestion (PDF, TXT, MD)
+- 🧠 TF-IDF + Cosine Similarity Retrieval Model (zero external ML dependencies)
+- 💡 Intent-Aware Generative Answer Synthesis (what/working/why/difference/example)
+- 🌐 Glassmorphism Web UI (Dashboard + Standalone Login Page)
+- ✅ 6/6 Pytest tests passing
 
-A practical FastAPI RAG project based on the syllabus through OAuth2/JWT and written in a simple, classroom-friendly style inspired by the teacher reference practical.
+---
 
-## Concepts covered
+## 🚀 Quick Start
 
-### Unit I — REST & FastAPI Fundamentals
-- HTTP verbs, status codes and headers
-- FastAPI project setup and endpoints
-- request/query/path/body parameters
-- response models and status codes
-- Swagger `/docs` and ReDoc `/redoc`
-
-### Unit II — Data Validation & Error Handling
-- Pydantic request validation
-- nested models and type coercion
-- Enum and custom `field_validator`
-- automatic serialization
-- HTTPException and custom error handler
-- JSONResponse, HTMLResponse and FileResponse
-- UploadFile/File upload and download
-
-### Unit III — Async Programming & Dependency Injection
-- sync and async routes
-- async endpoint/coroutine
-- BackgroundTasks
-- dependency injection and `Depends()`
-- pydantic-settings environment configuration
-- modular project structure
-
-### Unit IV — OAuth2/JWT
-- OAuth2 password bearer
-- JWT access tokens
-- protected RAG routes
-- Swagger Authorize flow
-
-## RAG
-The knowledge base is the FastAPI syllabus in `data/syllabus.json`. Retrieval uses TF-IDF plus cosine similarity. The answer is generated from the most relevant syllabus topics, keeping the project local and easy to explain in a practical/viva.
-
-## Run
+### 1. Install dependencies
 ```bash
-python -m venv .venv
-# Windows: .venv\Scripts\activate
-# Linux/macOS: source .venv/bin/activate
 pip install -r requirements.txt
-uvicorn app.main:app --reload
 ```
 
-Open `http://127.0.0.1:8000/docs` or `http://127.0.0.1:8000/redoc`.
+### 2. Configure environment (optional)
+```bash
+cp .env.example .env
+# Edit .env with your own SECRET_KEY
+```
 
-## Demo credentials
-`student / student123`
-`admin / admin123`
+### 3. Run the server
+```bash
+uvicorn main:app --reload
+```
 
-## Suggested Swagger demonstration
-1. GET `/`
-2. GET `/syllabus`
-3. GET `/syllabus/topics?unit_id=2`
-4. POST `/profile/validate`
-5. GET `/rag/search?query=pydantic`
-6. POST `/auth/token`
-7. Swagger Authorize
-8. POST `/rag/ask`
-9. POST `/files/upload`
-10. GET `/files/download/{filename}`
-11. GET `/syllabus/html`
-12. GET `/rag/async-demo`
+### 4. Open in browser
+- **Dashboard UI** → http://127.0.0.1:8000
+- **Login Page** → http://127.0.0.1:8000/login-page
+- **Swagger Docs** → http://127.0.0.1:8000/docs
 
+---
 
-## Backend-only note
+## 🔑 Default Credentials
 
-This project contains only the FastAPI backend, API routes, models, services,
-dependencies, configuration, RAG logic, authentication, and data files.
+| Username | Password |
+|----------|----------|
+| `admin`  | `admin123` |
+| `student`| `student123` |
 
-There is no React, HTML frontend application, CSS, JavaScript frontend,
-static website, or frontend build system.
+---
 
-`/syllabus/html` returns an `HTMLResponse` because HTML response classes are
-explicitly required by the syllabus. It is a backend API response used to
-demonstrate the FastAPI `HTMLResponse` concept; it is not a frontend project.
+## 📡 Main API Routes
 
-Swagger `/docs` and ReDoc `/redoc` are FastAPI's automatically generated API
-documentation and testing interfaces, not custom frontend code.
+### Interface
+| Method | Route | Description |
+|--------|-------|-------------|
+| GET | `/` | Main Dashboard UI |
+| GET | `/login-page` | Standalone Login & Register page |
+
+### Authentication
+| Method | Route | Description |
+|--------|-------|-------------|
+| POST | `/register` | Register a new user → returns JWT token |
+| POST | `/login` | OAuth2 form login |
+| POST | `/login/json` | JSON body login (`{"username":"...","password":"..."}`) |
+| GET | `/profile` | View authenticated user profile |
+
+### RAG Q&A
+| Method | Route | Description |
+|--------|-------|-------------|
+| POST | `/ask` | Ask a question — returns intent-synthesized generative answer |
+
+### Document Reader & Training
+| Method | Route | Description |
+|--------|-------|-------------|
+| POST | `/train/temporary` | Upload a PDF/TXT/MD file — model reads & trains on it |
+| POST | `/train/text` | Train model on raw pasted text input |
+| POST | `/train/notes-py` | Train model from embedded `notes.py` knowledge base |
+| GET | `/model/reader` | Fetch active document text & training stats |
+| GET | `/model/status` | Check model training status |
+| POST | `/model/reset` | Reset model to default `notes.py` knowledge base |
+
+---
+
+## 🧪 Run Tests
+
+```bash
+pytest test_main.py -v
+```
+
+---
+
+## 📁 Project Structure
+
+```
+RAG-API/
+├── main.py              # FastAPI app & all routes
+├── ml_model.py          # TF-IDF retrieval + generative answer synthesis
+├── notes.py             # Embedded knowledge base (NLP + FastAPI notes)
+├── test_main.py         # Pytest test suite
+├── requirements.txt     # Python dependencies
+├── data/
+│   ├── notes.txt        # Plaintext knowledge base (fallback)
+│   └── NLP_notes.txt    # NLP-specific notes
+├── static/
+│   ├── index.html       # Main dashboard UI
+│   └── login.html       # Standalone login/register page
+└── uploads/             # User-uploaded files (gitignored)
+```
+
+---
+
+## 🛠 Tech Stack
+
+- **FastAPI** — Web framework
+- **Pydantic v2** — Request validation
+- **python-jose** — JWT token generation & verification
+- **pypdf** — PDF text extraction
+- **Custom TF-IDF** — No external ML library required
+- **Vanilla HTML/CSS/JS** — Frontend (glassmorphism design)

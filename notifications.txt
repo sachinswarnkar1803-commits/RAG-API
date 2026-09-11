@@ -1,0 +1,90 @@
+student: What is Natural Language Processing?
+student: How is a root word obtained by cutting endings?
+student: What is the current stock price of Apple?
+admin: What is FastAPI TestClient used for?
+student: What is Natural Language Processing?
+student: What is tokenization?
+student: What is TF-IDF?
+student: What is VADER?
+student: How is a root word obtained by cutting endings?
+student: What is the current stock price of Apple?
+admin: What is FastAPI TestClient used for?
+student: What is Natural Language Processing?
+student: What is tokenization?
+student: What is TF-IDF?
+student: What is VADER?
+student: How is a root word obtained by cutting endings?
+student: What is the difference between stemming and lemmatization?
+student: What is the current stock price of Apple?
+admin: What is FastAPI TestClient used for?
+student: What is Natural Language Processing?
+student: What is tokenization?
+student: What is TF-IDF?
+student: What is VADER?
+student: How is a root word obtained by cutting endings?
+student: What is the difference between stemming and lemmatization?
+student: What is the current stock price of Apple?
+admin: What is FastAPI TestClient used for?
+student: What is TF-IDF?
+student: What is api
+student: What is Natural Language Processing?
+student: What is tokenization?
+student: What is TF-IDF?
+student: What is VADER?
+student: How is a root word obtained by cutting endings?
+student: What is the difference between stemming and lemmatization?
+student: What is the current stock price of Apple?
+admin: What is FastAPI TestClient used for?
+student: How is a root word obtained by cutting endings?
+student: What is tokenization?
+student: What is Natural Language Processing?
+student: What is tokenization?
+student: What is TF-IDF?
+student: What is VADER?
+student: How is a root word obtained by cutting endings?
+student: What is the difference between stemming and lemmatization?
+student: What is the current stock price of Apple?
+admin: What is FastAPI TestClient used for?
+student: What are BERT, GPT and RoBERTa?
+student: What is tokenization?
+student: What is Natural Language Processing?
+student: restapi and depens
+student: restapi
+student: What is Natural Language Processing?
+student: What is tokenization?
+student: What is TF-IDF?
+student: What is VADER?
+student: How is a root word obtained by cutting endings?
+student: What is the difference between stemming and lemmatization?
+student: What is the current stock price of Apple?
+admin: What is FastAPI TestClient used for?
+student: restapi
+student: restapi
+student: What is Natural Language Processing?
+student: What is tokenization?
+student: What is TF-IDF?
+student: What is VADER?
+student: What is the current stock price of Apple?
+student: What is Natural Language Processing?
+student: What is tokenization?
+student: What is TF-IDF?
+student: What is VADER?
+student: What is the current stock price of Apple?
+admin: What does deep learning utilize?
+admin: What does FastAPI use for routing?
+student: What is Natural Language Processing?
+student: What is tokenization?
+student: What is TF-IDF?
+student: What is VADER?
+student: What is the current stock price of Apple?
+admin: What does deep learning utilize?
+professordoe: What is tokenization?
+student: What are BERT, GPT and RoBERTa?
+student: naive base
+student: What is Natural Language Processing?
+student: What is tokenization?
+student: What is TF-IDF?
+student: What is VADER?
+student: What is the current stock price of Apple?
+admin: What does deep learning utilize?
+student: What is tokenization?

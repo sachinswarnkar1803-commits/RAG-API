@@ -1,7 +1,8 @@
 fastapi
-uvicorn[standard]
+uvicorn
 pydantic
-pydantic-settings
 python-multipart
-python-jose[cryptography]
-scikit-learn
+python-jose
+httpx
+pytest
+pypdf
